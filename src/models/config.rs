@@ -47,7 +47,7 @@ impl std::str::FromStr for LogLevel {
 #[derive(Clone, Debug)]
 pub struct Config {
     /// Number of worker processes (default: 2).
-    pub workers: u32,
+    pub workers: usize,
     /// IP address or hostname to bind the HTTP server (default: 0.0.0.0).
     pub socket_host: String,
     /// Port number for the HTTP server (default: 8080).
@@ -84,6 +84,15 @@ impl Config {
                     .unwrap_or($default as u64) as u32
             };
         }
+        macro_rules! kv_usize {
+            ($key:expr, $default:expr) => {
+                store
+                    .get($key, Some(json!($default)))
+                    .unwrap_or(json!($default))
+                    .as_u64()
+                    .unwrap_or($default as u64) as usize
+            };
+        }
         macro_rules! kv_level {
             ($key:expr, $default:expr) => {{
                 let s = store
@@ -103,7 +112,7 @@ impl Config {
             .unwrap_or(8080) as u16;
 
         Self {
-            workers: kv_u32!("workers", 2u32),
+            workers: kv_usize!("workers", 2usize),
             socket_host: kv_str!("socket_host", "0.0.0.0"),
             socket_port,
             log_level_app: kv_level!("log_level_app", "Info"),
