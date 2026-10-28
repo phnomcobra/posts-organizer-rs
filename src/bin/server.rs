@@ -7,6 +7,8 @@ use tokio::time::sleep;
 
 use posts_organizer_rs::{
     logger::init_logger,
+    models::config::Config,
+
 };
 
 #[actix_web::main]
@@ -17,10 +19,11 @@ async fn main() -> Result<(), std::io::Error> {
         }
     }
 
-    init_logger(
-        "debug",
-        "debug",
-    );
+    init_logger("debug", "debug");
+
+    let config = Config::load();
+
+    config.log();
 
     let mut scheduler = AsyncScheduler::new();
 
@@ -44,12 +47,12 @@ async fn main() -> Result<(), std::io::Error> {
             .wrap(TracingLogger::default())
             .app_data(web::PayloadConfig::new(usize::MAX))
     })
-    .workers(2);
+    .workers(config.workers);
 
     log::info!("Starting server");
 
     server
-        .bind(("0.0.0.0", 8081u16))?
+        .bind((config.socket_host.as_str(), config.socket_port))?
         .run()
         .await
 }
