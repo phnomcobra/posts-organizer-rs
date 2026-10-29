@@ -51,34 +51,35 @@ pub async fn catch_all_post_handler(
 /// Catch-all GET handler.  Ported from postorganizer's `router/catchall.py`
 /// `get` route: retrieves all posts from the posts collection and returns them as JSON.
 pub async fn catch_all_get_handler(req: HttpRequest) -> HttpResponse {
-    let path = req.path();
-    match open_posts() {
-        Ok(collection) => match collection.pop_limited(&[("path", &format!("$lt:{path}"))], 1) {
-            Ok(posts) => {
-                if let Some(post) = posts.first() {
-                    match STANDARD.decode(&post.object.b64_body) {
-                        Ok(body) => {
-                            return HttpResponse::Ok()
-                                .insert_header(("CREATE_TIME", post.object.create_time.to_string()))
-                                .body(body);
-                        }
-                        Err(error) => {
-                            log::error!("Failed to decode post body: {}", error);
-                            return HttpResponse::InternalServerError().finish();
-                        }
-                    }
-                } else {
-                    return HttpResponse::NotFound().finish();
-                }
-            },
-            Err(error) => {
-                log::error!("Failed to pop expired posts: {}", error);
-                return HttpResponse::InternalServerError().finish();
-            }
-        }
+    let collection = match open_posts() {
+        Ok(collection) => collection,
         Err(error) => {
             log::error!("Failed to open posts collection: {}", error);
-            HttpResponse::InternalServerError().finish()
+            return HttpResponse::InternalServerError().finish();
         }
-    }
+    };
+
+    let posts = match collection.pop_limited(&[("path", &format!("$lt:{}", req.path()))], 1) {
+        Ok(posts) => posts,
+        Err(error) => {
+            log::error!("Failed to pop expired posts: {}", error);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+
+    let Some(post) = posts.first() else {
+        return HttpResponse::NotFound().finish();
+    };
+
+    let body = match STANDARD.decode(&post.object.b64_body) {
+        Ok(body) => body,
+        Err(error) => {
+            log::error!("Failed to decode post body: {}", error);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+
+    HttpResponse::Ok()
+        .insert_header(("CREATE_TIME", post.object.create_time.to_string()))
+        .body(body)
 }
