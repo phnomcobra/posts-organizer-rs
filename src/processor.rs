@@ -48,19 +48,59 @@ pub async fn catch_all_post_handler(
     }
 }
 
+/*
+
+@FLASK_APP.route('/', defaults={'path': ''}, methods=['GET'])
+@FLASK_APP.route('/<path:path>', methods=['GET'])
+def get(path: str) -> Union[Response, NoReturn]:
+    """This function registers a catch-all route for handling GET
+    requests.
+
+    Args:
+        path:
+            The path being requested.
+
+    Returns:
+        HTTP response or no response.
+    """
+    try:
+        data, create_time = pop_file(get_safe_path(path))
+        response = Response(data)
+        response.headers['CREATE_TIME'] = create_time
+        logging.info(f'{len(data)} bytes from {path}')
+        return response
+    except (IndexError, OSError):
+        logging.warning(f'{path} is empty')
+        return abort(404)
+    except Exception as exception: # pylint: disable=broad-except
+        logging.error(f'{path} raised {exception}')
+        return abort(500)
+
+*/
+
+
 /// Catch-all GET handler.  Ported from postorganizer's `router/catchall.py`
 /// `get` route: retrieves all posts from the posts collection and returns them as JSON.
-pub async fn catch_all_get_handler() -> HttpResponse {
+pub async fn catch_all_get_handler(req: HttpRequest) -> HttpResponse {
+
+    let path = req.path();
+
     match open_posts() {
-        Ok(posts) => match posts.find_all() {
-            Ok(all_posts) => HttpResponse::Ok().json(all_posts),
+        Ok(collection) => match collection.pop_limited(&[("path", &format!("$lt:{path}"))], 1) {
+            Ok(posts) => {
+                if let Some(post) = posts.first() {
+                    return HttpResponse::Ok().body(STANDARD.decode(post.b64body));
+                } else {
+                    return HttpResponse::NotFound().finish();
+                }
+            },
             Err(error) => {
-                log::error!("Failed to retrieve posts: {}", error);
-                HttpResponse::InternalServerError().finish()
+                log::error!("Failed to pop expired posts: {}", error);
+                return HttpResponse::InternalServerError().finish();
             }
-        },
+        }
         Err(error) => {
-            log::error!("Failed to open posts collection: {}", error);
+            log::error!("Failed to retrieve posts: {}", error);
             HttpResponse::InternalServerError().finish()
         }
     }

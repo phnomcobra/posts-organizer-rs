@@ -1203,6 +1203,7 @@ dependencies = [
  "clokwerk",
  "env_logger",
  "log",
+ "rand",
  "regex",
  "reqwest",
  "rusqlite",
