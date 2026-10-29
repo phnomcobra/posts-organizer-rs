@@ -47,3 +47,21 @@ pub async fn catch_all_post_handler(
         }
     }
 }
+
+/// Catch-all GET handler.  Ported from postorganizer's `router/catchall.py`
+/// `get` route: retrieves all posts from the posts collection and returns them as JSON.
+pub async fn catch_all_get_handler() -> HttpResponse {
+    match open_posts() {
+        Ok(posts) => match posts.find_all() {
+            Ok(all_posts) => HttpResponse::Ok().json(all_posts),
+            Err(error) => {
+                log::error!("Failed to retrieve posts: {}", error);
+                HttpResponse::InternalServerError().finish()
+            }
+        },
+        Err(error) => {
+            log::error!("Failed to open posts collection: {}", error);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
