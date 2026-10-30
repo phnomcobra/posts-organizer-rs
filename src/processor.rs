@@ -24,13 +24,13 @@ pub fn expire_posts(expiration_time: f64) -> Result<(), Box<dyn std::error::Erro
 /// `post` route: stores the request body and path as a new post in the posts
 /// collection, then echoes the body back to the caller.
 pub async fn catch_all_post_handler(
-    req: HttpRequest,
+    request: HttpRequest,
     body: Bytes,
 ) -> HttpResponse {
     let post = Post {
         b64_body: STANDARD.encode(&body),
         size: body.len(),
-        path: req.path().to_string(),
+        path: request.path().to_string(),
         create_time: Utc::now().timestamp_millis(),
         objuuid: None,
         coluuid: None,
@@ -38,11 +38,11 @@ pub async fn catch_all_post_handler(
 
     match open_posts().and_then(|posts| posts.upsert_object(post)) {
         Ok(_) => {
-            log::info!("{} bytes to {}", body.len(), req.path());
+            log::info!("{} bytes to {}", body.len(), request.path());
             HttpResponse::Ok().body(body)
         }
         Err(error) => {
-            log::error!("{} raised {}", req.path(), error);
+            log::error!("{} raised {}", request.path(), error);
             HttpResponse::InternalServerError().finish()
         }
     }
@@ -50,7 +50,7 @@ pub async fn catch_all_post_handler(
 
 /// Catch-all GET handler.  Ported from postorganizer's `router/catchall.py`
 /// `get` route: retrieves all posts from the posts collection and returns them as JSON.
-pub async fn catch_all_get_handler(req: HttpRequest) -> HttpResponse {
+pub async fn catch_all_get_handler(request: HttpRequest) -> HttpResponse {
     let collection = match open_posts() {
         Ok(collection) => collection,
         Err(error) => {
@@ -59,7 +59,7 @@ pub async fn catch_all_get_handler(req: HttpRequest) -> HttpResponse {
         }
     };
 
-    let posts = match collection.pop_limited(&[("path", &format!("$lt:{}", req.path()))], 1) {
+    let posts = match collection.pop_limited(&[("path", &format!("$lt:{}", request.path()))], 1) {
         Ok(posts) => posts,
         Err(error) => {
             log::error!("Failed to pop expired posts: {}", error);

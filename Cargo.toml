@@ -28,5 +28,9 @@ rand = "0.10.3"
 name = "posts-server"
 path = "src/bin/server.rs"
 
+[[bin]]
+name = "posts-configure"
+path = "src/bin/configure.rs"
+
 [features]
 debian = []

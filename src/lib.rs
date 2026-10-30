@@ -1,3 +1,4 @@
+pub mod cli;
 pub mod collections;
 pub mod config;
 pub mod dao;
