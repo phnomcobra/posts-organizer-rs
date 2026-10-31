@@ -41,6 +41,20 @@ impl std::str::FromStr for LogLevel {
     }
 }
 
+impl LogLevel {
+    /// Convert to the `log` crate's `LevelFilter`, which it can natively
+    /// filter against. The `log` crate has no `Critical` level, so it is
+    /// mapped to `Error`, its most severe level.
+    pub fn to_level_filter(&self) -> log::LevelFilter {
+        match self {
+            LogLevel::Debug => log::LevelFilter::Debug,
+            LogLevel::Info => log::LevelFilter::Info,
+            LogLevel::Warning => log::LevelFilter::Warn,
+            LogLevel::Error | LogLevel::Critical => log::LevelFilter::Error,
+        }
+    }
+}
+
 /// Configuration settings for the posts organizer application.
 /// All values are loaded from the kvstore collection; defaults are seeded on first run.
 #[derive(Clone, Debug)]

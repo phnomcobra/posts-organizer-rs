@@ -7,10 +7,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use posts_organizer_rs::{
-    collections::vacuum_collections,
-    logger::init_logger,
-    models::config::Config,
-    processor::{catch_all_get_handler, catch_all_post_handler, expire_posts},
+    collections::{vacuum_collections}, logger::init_logger, models::config::Config, processor::{catch_all_get_handler, catch_all_post_handler, expire_posts},
 };
 
 #[actix_web::main]
@@ -23,7 +20,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let config = Config::load();
 
-    init_logger(&config.log_level_app.to_string(), &config.log_level_api.to_string());
+    init_logger(config.log_level_app.to_level_filter(), config.log_level_api.to_level_filter());
 
     config.log();
 
@@ -59,6 +56,9 @@ async fn main() -> Result<(), std::io::Error> {
             .route("/{tail:.*}", web::post().to(catch_all_post_handler))
     })
     .workers(config.workers);
+
+    vacuum_collections()
+        .unwrap_or_else(|e| log::error!("Error vacuuming collections: {e}"));
 
     log::info!("Starting server");
 

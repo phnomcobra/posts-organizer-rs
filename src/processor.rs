@@ -60,7 +60,7 @@ pub async fn catch_all_get_handler(request: HttpRequest) -> HttpResponse {
         }
     };
 
-    let posts = match collection.pop_limited(&[("path", &format!("$lt:{}", request.path()))], 1) {
+    let posts = match collection.pop_limited(&[("path", request.path())], 1) {
         Ok(posts) => posts,
         Err(error) => {
             log::error!("Failed to pop expired posts: {}", error);

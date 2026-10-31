@@ -1,22 +1,14 @@
 use chrono::Utc;
-use log::Level;
-use std::{io::Write, path::Path, str::FromStr};
+use log::LevelFilter;
+use std::{io::Write, path::Path};
 
-pub fn init_logger(app_loglevel: &str, api_loglevel: &str) {
-    let api_filter = Level::from_str(api_loglevel)
-        .expect("invalid API log level filter specified")
-        .to_level_filter();
-
+pub fn init_logger(app_loglevel: LevelFilter, api_loglevel: LevelFilter) {
     env_logger::builder()
-        .filter_level(
-            Level::from_str(app_loglevel)
-                .expect("invalid log level filter specified")
-                .to_level_filter(),
-        )
-        .filter_module("actix_web", api_filter)
-        .filter_module("actix_server", api_filter)
-        .filter_module("actix_http", api_filter)
-        .filter_module("tracing_actix_web", api_filter)
+        .filter_level(app_loglevel)
+        .filter_module("actix_web", api_loglevel)
+        .filter_module("actix_server", api_loglevel)
+        .filter_module("actix_http", api_loglevel)
+        .filter_module("tracing_actix_web", api_loglevel)
         .format(move |buf, record| {
             let short_filename = record
                 .file()
