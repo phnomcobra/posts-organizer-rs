@@ -1,5 +1,8 @@
 use clap::Parser;
-use posts_organizer_rs::{dao::kvstore::KVStore, models::config::LogLevel};
+use posts_organizer_rs::{
+    dao::kvstore::KVStore,
+    models::config::{Config, LogLevel},
+};
 
 #[derive(Parser, Debug)]
 #[clap(name = "posts-configure", about = "Configure posts organizer settings")]
@@ -77,30 +80,18 @@ fn load_from_environment(store: &KVStore) -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-fn display_config(store: &KVStore) {
-    let v = |key: &str| -> String {
-        store
-            .get(key, None)
-            .ok()
-            .and_then(|j| {
-                if j.is_null() {
-                    None
-                } else {
-                    Some(j.to_string().trim_matches('"').to_string())
-                }
-            })
-            .unwrap_or_else(|| String::from("(not set)"))
-    };
+fn display_config() {
+    let config = Config::load();
     println!("\n{}", "=".repeat(50));
     println!("Current Configuration");
     println!("{}", "=".repeat(50));
     let items = [
-        ("Workers", v("workers")),
-        ("Socket Host", v("socket_host")),
-        ("Socket Port", v("socket_port")),
-        ("Log Level App", v("log_level_app")),
-        ("Log Level API", v("log_level_api")),
-        ("Timeout Secs", v("timeout_secs")),
+        ("Workers", config.workers.to_string()),
+        ("Socket Host", config.socket_host.clone()),
+        ("Socket Port", config.socket_port.to_string()),
+        ("Log Level App", config.log_level_app.to_string()),
+        ("Log Level API", config.log_level_api.to_string()),
+        ("Timeout Secs", config.timeout_secs.to_string()),
     ];
     for (label, value) in &items {
         let display = if value.len() > 60 {
@@ -171,7 +162,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if args.view {
-        display_config(&store);
+        display_config();
     } else if !modified {
         println!("No options provided. Use --help for usage information.");
     }
