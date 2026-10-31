@@ -21,19 +21,23 @@ async fn main() -> Result<(), std::io::Error> {
         }
     }
 
-    init_logger("debug", "debug");
-
     let config = Config::load();
+
+    init_logger(&config.log_level_app.to_string(), &config.log_level_api.to_string());
 
     config.log();
 
     let mut scheduler = AsyncScheduler::new();
 
-    scheduler.every(Seconds(600)).run(|| async {
-        let config = config.clone();
+    scheduler.every(Seconds(60)).run(|| async {
+        let config = Config::load();
+        expire_posts(Utc::now().timestamp() as u32 - config.timeout_secs)
+            .unwrap_or_else(|e| log::error!("Error expiring posts: {e}"));
+    });
 
-        expire_posts(config.timeout_secs * 1000 as f64 + Utc::now().timestamp_millis() as f64).unwrap_or_else(|e| log::error!("Error expiring posts: {e}"));
-        vacuum_collections().unwrap_or_else(|e| log::error!("Error vacuuming collections: {e}"));
+    scheduler.every(Seconds(600)).run(|| async {
+        vacuum_collections()
+            .unwrap_or_else(|e| log::error!("Error vacuuming collections: {e}"));
     });
 
     log::info!("Starting scheduler");

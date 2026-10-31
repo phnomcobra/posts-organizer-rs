@@ -43,39 +43,39 @@ struct Args {
 }
 
 fn load_from_environment(store: &KVStore) -> Result<(), Box<dyn std::error::Error>> {
-    if let Ok(v) = std::env::var("POSTS_WORKERS") {
-        if let Ok(w) = v.parse::<usize>() {
-            store.commit("workers", w as u64)?;
-            println!("✓ Loaded POSTS_WORKERS: {v}");
-        }
+    if let Ok(v) = std::env::var("POSTS_WORKERS")
+        && let Ok(w) = v.parse::<usize>()
+    {
+        store.commit("workers", w as u64)?;
+        println!("✓ Loaded POSTS_WORKERS: {v}");
     }
     if let Ok(v) = std::env::var("POSTS_HOST") {
         store.commit("socket_host", v.as_str())?;
         println!("✓ Loaded POSTS_HOST: {v}");
     }
-    if let Ok(v) = std::env::var("POSTS_PORT") {
-        if let Ok(port) = v.parse::<u16>() {
-            store.commit("socket_port", port)?;
-            println!("✓ Loaded POSTS_PORT: {v}");
-        }
+    if let Ok(v) = std::env::var("POSTS_PORT")
+        && let Ok(port) = v.parse::<u16>()
+    {
+        store.commit("socket_port", port)?;
+        println!("✓ Loaded POSTS_PORT: {v}");
     }
-    if let Ok(v) = std::env::var("POSTS_LOG_LEVEL_APP") {
-        if v.to_uppercase().parse::<LogLevel>().is_ok() {
-            store.commit("log_level_app", v.to_uppercase())?;
-            println!("✓ Loaded POSTS_LOG_LEVEL_APP: {v}");
-        }
+    if let Ok(v) = std::env::var("POSTS_LOG_LEVEL_APP")
+        && v.to_uppercase().parse::<LogLevel>().is_ok()
+    {
+        store.commit("log_level_app", v.to_uppercase())?;
+        println!("✓ Loaded POSTS_LOG_LEVEL_APP: {v}");
     }
-    if let Ok(v) = std::env::var("POSTS_LOG_LEVEL_API") {
-        if v.to_uppercase().parse::<LogLevel>().is_ok() {
-            store.commit("log_level_api", v.to_uppercase())?;
-            println!("✓ Loaded POSTS_LOG_LEVEL_API: {v}");
-        }
+    if let Ok(v) = std::env::var("POSTS_LOG_LEVEL_API")
+        && v.to_uppercase().parse::<LogLevel>().is_ok()
+    {
+        store.commit("log_level_api", v.to_uppercase())?;
+        println!("✓ Loaded POSTS_LOG_LEVEL_API: {v}");
     }
-    if let Ok(v) = std::env::var("POSTS_TIMEOUT_SECS") {
-        if let Ok(n) = v.parse::<u32>() {
-            store.commit("timeout_secs", n)?;
-            println!("✓ Loaded POSTS_TIMEOUT_SECS: {v}");
-        }
+    if let Ok(v) = std::env::var("POSTS_TIMEOUT_SECS")
+        && let Ok(n) = v.parse::<u32>()
+    {
+        store.commit("timeout_secs", n)?;
+        println!("✓ Loaded POSTS_TIMEOUT_SECS: {v}");
     }
     Ok(())
 }

@@ -215,10 +215,10 @@ impl Document {
         queries: &[(&str, &str)],
         limit: Option<usize>,
     ) -> Result<Vec<String>> {
-        if let Some(n) = limit {
-            if n < 1 {
-                return Err(anyhow!("limit must be >= 1, got {}", n));
-            }
+        if let Some(n) = limit
+            && n < 1
+        {
+            return Err(anyhow!("limit must be >= 1, got {}", n));
         }
 
         // Filter out reserved attribute names from queries
@@ -407,18 +407,18 @@ impl Document {
         };
 
         for (objuuid, value_text) in rows {
-            if let Ok(value) = serde_json::from_str::<Value>(&value_text) {
-                if let Some(v) = read_key_at_path(path, &value) {
-                    let val_str = match &v {
-                        Value::String(s) => s.clone(),
-                        other => other.to_string(),
-                    };
-                    let _ = conn.execute(
-                        "INSERT OR REPLACE INTO TBL_INDEX \
-                         (OBJUUID, COLUUID, ATTRIBUTE, VALUE) VALUES (?1, ?2, ?3, ?4);",
-                        params![&objuuid, coluuid, attribute, &val_str],
-                    );
-                }
+            if let Ok(value) = serde_json::from_str::<Value>(&value_text)
+                && let Some(v) = read_key_at_path(path, &value)
+            {
+                let val_str = match &v {
+                    Value::String(s) => s.clone(),
+                    other => other.to_string(),
+                };
+                let _ = conn.execute(
+                    "INSERT OR REPLACE INTO TBL_INDEX \
+                     (OBJUUID, COLUUID, ATTRIBUTE, VALUE) VALUES (?1, ?2, ?3, ?4);",
+                    params![&objuuid, coluuid, attribute, &val_str],
+                );
             }
         }
         Ok(())

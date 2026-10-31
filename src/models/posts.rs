@@ -9,7 +9,7 @@ pub struct Post {
     pub size: usize,
     /// URL path the post was sent to.
     pub path: String,
-    /// Unix timestamp when the post was created.
+    /// Unix timestamp (in seconds) when the post was created.
     #[serde(default)]
     pub create_time: i64,
     /// UUID identifying this post in the collection.

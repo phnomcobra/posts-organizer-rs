@@ -1,5 +1,4 @@
 use serde_json::json;
-use uuid::Uuid;
 
 use crate::dao::kvstore::KVStore;
 
