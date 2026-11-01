@@ -9,9 +9,10 @@ pub struct Post {
     pub size: usize,
     /// URL path the post was sent to.
     pub path: String,
-    /// Unix timestamp (in seconds) when the post was created.
+    /// Unix epoch timestamp (seconds, 10 integer digits) when the post was
+    /// created, with sub-second precision retained in the fraction.
     #[serde(default)]
-    pub create_time: i64,
+    pub create_time: f64,
     /// UUID identifying this post in the collection.
     pub objuuid: Option<String>,
     /// UUID identifying the collection containing this record.

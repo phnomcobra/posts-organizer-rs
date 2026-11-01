@@ -37,5 +37,9 @@ path = "src/bin/configure.rs"
 name = "posts-bench"
 path = "src/bin/bench.rs"
 
+[[bin]]
+name = "posts-stat"
+path = "src/bin/stat.rs"
+
 [features]
 debian = []

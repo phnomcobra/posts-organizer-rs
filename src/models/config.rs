@@ -130,7 +130,7 @@ impl Config {
             socket_port,
             log_level_app: kv_level!("log_level_app", "Info"),
             log_level_api: kv_level!("log_level_api", "Info"),
-            timeout_secs: kv_u32!("timeout_secs", 600u32),
+            timeout_secs: kv_u32!("timeout_secs", 86400u32),
         }
     }
 

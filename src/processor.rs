@@ -32,7 +32,10 @@ pub async fn catch_all_post_handler(
         b64_body: STANDARD.encode(&body),
         size: body.len(),
         path: request.path().to_string(),
-        create_time: Utc::now().timestamp_millis(),
+        // 10-digit epoch seconds (with millisecond fractional precision)
+        // rather than milliseconds, so `create_time` is directly comparable
+        // to other second-based epoch values (e.g. `expire_posts`'s cutoff).
+        create_time: Utc::now().timestamp_millis() as f64 / 1000.0,
         objuuid: None,
         coluuid: None,
     };

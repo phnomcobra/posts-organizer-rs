@@ -17,6 +17,7 @@ use bytes::Bytes;
 use reqwest::{Client, Method};
 use tokio::task::JoinSet;
 
+use posts_organizer_rs::format::format_bytes;
 use posts_organizer_rs::models::config::Config;
 
 /// Largest concurrency level tested.
@@ -129,18 +130,6 @@ fn random_payload(size: usize) -> Bytes {
     let mut buf = vec![0u8; size];
     rand::fill(&mut buf[..]);
     Bytes::from(buf)
-}
-
-/// Format a byte count using the appropriate binary unit (B/KB/MB/GB).
-fn format_bytes(bytes: f64) -> String {
-    const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
-    let mut value = bytes;
-    let mut unit = 0;
-    while value >= 1024.0 && unit < UNITS.len() - 1 {
-        value /= 1024.0;
-        unit += 1;
-    }
-    format!("{value:.2} {}", UNITS[unit])
 }
 
 /// Format a transfer rate (bytes/sec) using the appropriate binary unit.
