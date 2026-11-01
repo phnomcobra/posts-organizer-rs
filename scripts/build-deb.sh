@@ -46,8 +46,6 @@ cat > "$BUILD_DIR/DEBIAN/postinst" <<'EOF'
 set -e
 mkdir -p /var/posts-organizer-rs
 systemctl daemon-reload
-systemctl enable posts-server
-systemctl start posts-server
 EOF
 chmod 0755 "$BUILD_DIR/DEBIAN/postinst"
 
