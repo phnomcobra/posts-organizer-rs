@@ -1,0 +1,13 @@
+[Unit]
+Description=Posts Organizer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/posts-server
+WorkingDirectory=/var/posts-organizer-rs
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

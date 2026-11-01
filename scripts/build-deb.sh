@@ -1,0 +1,69 @@
+#!/usr/bin/bash
+set -e
+
+PACKAGE_NAME="posts-organizer-rs"
+VERSION="0.1.0"
+ARCH="amd64"
+DEB_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
+DIST_DIR="$(dirname "$0")/../dist"
+BUILD_DIR="$(mktemp -d)"
+
+# Ensure dist directory exists
+mkdir -p "$DIST_DIR"
+
+# Remove any existing deb file
+rm -f "$DIST_DIR"/*.deb
+
+# Build release binaries with the debian feature enabled
+cargo build --release --features debian
+
+# Set up deb package directory structure
+mkdir -p "$BUILD_DIR/DEBIAN"
+mkdir -p "$BUILD_DIR/usr/bin"
+mkdir -p "$BUILD_DIR/lib/systemd/system"
+
+# Copy binaries
+cp target/release/posts-bench "$BUILD_DIR/usr/bin/"
+cp target/release/posts-configure "$BUILD_DIR/usr/bin/"
+cp target/release/posts-server "$BUILD_DIR/usr/bin/"
+cp target/release/posts-stat "$BUILD_DIR/usr/bin/"
+
+# Copy service file
+cp "$(dirname "$0")/../etc/posts-server.service" "$BUILD_DIR/lib/systemd/system/"
+
+# Write control file
+cat > "$BUILD_DIR/DEBIAN/control" <<EOF
+Package: $PACKAGE_NAME
+Version: $VERSION
+Architecture: $ARCH
+Maintainer: Justin Dierking <phnomcobra@gmail.com>
+Description: Posts Organizer
+EOF
+
+# Write postinst script
+cat > "$BUILD_DIR/DEBIAN/postinst" <<'EOF'
+#!/bin/sh
+set -e
+mkdir -p /var/posts-organizer-rs
+systemctl daemon-reload
+systemctl enable posts-server
+systemctl start posts-server
+EOF
+chmod 0755 "$BUILD_DIR/DEBIAN/postinst"
+
+# Write prerm script
+cat > "$BUILD_DIR/DEBIAN/prerm" <<'EOF'
+#!/bin/sh
+set -e
+systemctl stop posts-server || true
+systemctl disable posts-server || true
+EOF
+chmod 0755 "$BUILD_DIR/DEBIAN/prerm"
+
+# Build the deb
+dpkg-deb --build "$BUILD_DIR" "$DIST_DIR/$DEB_NAME"
+
+# Clean up
+rm -rf "$BUILD_DIR"
+
+echo "Built: $DIST_DIR/$DEB_NAME"

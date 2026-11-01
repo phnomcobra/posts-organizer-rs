@@ -12,11 +12,11 @@ pub use object::Object;
 
 /// Returns the path for a file-backed SQLite database.
 ///
-/// When built with `--features debian`, files are placed in `/var/agt/`.
+/// When built with `--features debian`, files are placed in `/var/posts-organizer-rs/`.
 /// Otherwise they are created in the current working directory.
 pub fn db_path(name: &str) -> String {
     #[cfg(feature = "debian")]
-    { format!("/var/agt/{}.sqlite", name) }
+    { format!("/var/posts-organizer-rs/{}.sqlite", name) }
     #[cfg(not(feature = "debian"))]
     { format!("{}.sqlite", name) }
 }
