@@ -484,6 +484,20 @@ impl Document {
             .collect();
         Ok(result)
     }
+
+    // ── Indexes ───────────────────────────────────────────────────────────────
+
+    pub fn list_index_entries(&self, coluuid: &str, attribute: &str) -> Result<Vec<(String, String)>> {
+        let conn = self.connection.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT OBJUUID, VALUE FROM TBL_INDEX WHERE COLUUID = ?1 AND ATTRIBUTE = ?2;",
+        )?;
+        let result = stmt
+            .query_map(params![coluuid, attribute], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .filter_map(|r| r.ok())
+            .collect();
+        Ok(result)
+    }
 }
 
 // ── Operator parsing ──────────────────────────────────────────────────────────
