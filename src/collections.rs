@@ -19,6 +19,10 @@ use crate::dao::db_path;
 use crate::dao::kvstore::KeyValuePair;
 use crate::models::posts::Post;
 
+// ── In-memory connection URIs ─────────────────────────────────────────────────
+
+const CONN_POSTS: &str = "file:posts_organizer_rs?mode=memory";
+
 // ── Singletons ────────────────────────────────────────────────────────────────
 
 static POSTS:   OnceLock<Collection<Post>>         = OnceLock::new();
@@ -29,7 +33,9 @@ static KVSTORE: OnceLock<Collection<KeyValuePair>> = OnceLock::new();
 /// Open (or return the cached singleton for) the `posts` collection.
 pub fn open_posts() -> Result<Collection<Post>> {
     Ok(POSTS.get_or_init(|| {
-        let c = Collection::new("posts", Some(db_path("posts").as_ref()))
+        // let c = Collection::new("posts", Some(db_path("posts").as_ref()))
+           // .expect("failed to open posts collection");
+        let c = Collection::new("posts", Some(CONN_POSTS))
             .expect("failed to open posts collection");
         c.create_attribute("path", "/path").ok();
         c.create_attribute("create_time", "/create_time").ok();
