@@ -10,6 +10,12 @@
 //! concurrency level is tested against every payload size. Both POST
 //! (upload) and GET (download) traffic are measured at every step, and
 //! bandwidth/latency are reported in human-readable units.
+//!
+//! Each step starts and ends with an empty `/benchmark` endpoint: any
+//! leftover posts are drained (via repeated popping `GET`s) before the POST
+//! wave and after the GET wave, so results aren't skewed by data left over
+//! from a previous step (e.g. posts a failed `GET` didn't pop) and the
+//! server's storage doesn't grow unbounded across the whole run.
 
 use std::time::{Duration, Instant};
 
@@ -187,6 +193,35 @@ fn print_row(method: &str, step: &Step, result: &WaveResult) {
     }
 }
 
+/// Repeatedly GET `url` — each matching request pops (deletes) one stored
+/// post — until the server reports none remain (`404`), returning the
+/// number of posts removed. Stops early and warns on any unexpected
+/// response so a server hiccup can't hang the benchmark indefinitely.
+async fn drain(client: &Client, url: &str) -> usize {
+    let mut drained = 0usize;
+    loop {
+        match client.get(url).send().await {
+            Ok(response) if response.status() == reqwest::StatusCode::NOT_FOUND => break,
+            Ok(response) if response.status().is_success() => {
+                let _ = response.bytes().await;
+                drained += 1;
+            }
+            Ok(response) => {
+                eprintln!(
+                    "warning: unexpected status {} while draining {url}",
+                    response.status()
+                );
+                break;
+            }
+            Err(error) => {
+                eprintln!("warning: failed to drain {url}: {error}");
+                break;
+            }
+        }
+    }
+    drained
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load();
@@ -212,11 +247,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for step in progression() {
         let payload = random_payload(step.payload_size);
 
+        let leftover = drain(&client, &url).await;
+        if leftover > 0 {
+            eprintln!("  drained {leftover} leftover post(s) before POST wave");
+        }
+
         let post_result = run_wave(&client, Method::POST, &url, step.concurrency, Some(payload)).await;
         print_row("POST", &step, &post_result);
 
         let get_result = run_wave(&client, Method::GET, &url, step.concurrency, None).await;
         print_row("GET", &step, &get_result);
+
+        let leftover = drain(&client, &url).await;
+        if leftover > 0 {
+            eprintln!("  drained {leftover} leftover post(s) after GET wave");
+        }
     }
 
     Ok(())
