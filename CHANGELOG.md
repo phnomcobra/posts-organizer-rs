@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-02
+
 ### Added
 
 - Catch-all HTTP `posts-server`: `POST` to any path stores the request
@@ -20,7 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variables.
 - `posts-bench` load-testing tool: drives `POST`/`GET` traffic against
   `/benchmark` across a progression of concurrency and payload sizes,
-  reporting bandwidth and latency in human-readable units.
+  reporting bandwidth and latency in human-readable units. Each step
+  automatically drains any posts left at `/benchmark` before its POST
+  wave and after its GET wave, so results aren't skewed by leftovers and
+  the server's storage doesn't grow unbounded across a full run.
 - `posts-stat` reporting tool: aggregates stored posts by URL path
   (count, combined size, most recent post age) using the collection's
   indexed attributes, without decoding post bodies.
@@ -41,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Debian package's `postinst`/`prerm` scripts and `db_path` now use
   `/var/posts-organizer-rs/` for SQLite files when built with the
   `debian` feature.
+- SQL statements in `src/dao/document.rs` were extracted into individual,
+  pretty-printed `.sql` files under `src/dao/sql/` and included at
+  compile time (`include_str!`), with identical statements reused across
+  functions consolidated into a single file instead of duplicated.
 
 ### Fixed
 
