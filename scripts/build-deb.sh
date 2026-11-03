@@ -2,7 +2,7 @@
 set -e
 
 PACKAGE_NAME="posts-organizer-rs"
-VERSION="0.1.0"
+VERSION="1.0.0"
 ARCH="amd64"
 DEB_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 DIST_DIR="$(dirname "$0")/../dist"
